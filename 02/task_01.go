@@ -37,7 +37,7 @@ func init() {
 
 func main() {
 	var (
-		reportsSafe int
+		reportsSafe   int
 		reportsUnsafe int
 	)
 
@@ -56,7 +56,7 @@ func main() {
 		var result reportResult
 
 		fmt.Printf("\n--- new report: %v\n", levels)
-	
+
 		// Convert string elements into integers, run tests.
 		for i := 0; i < len(levels); i++ {
 			if level, err := strconv.Atoi(levels[i]); err == nil {
