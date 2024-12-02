@@ -68,29 +68,54 @@ func main() {
 	slices.Sort(leftVals)
 	slices.Sort(rightVals)
 
+	rightValsCount := func() map[int]int {
+		var valCount = make(map[int]int)
+
+		for i := 0; i < len(rightVals); i++ {
+			valCount[rightVals[i]]++
+		}
+
+		return valCount
+	}()
+
 	if len(leftVals) != len(rightVals) {
 		fmt.Println("Value slices are not of the same len")
 		os.Exit(2)
 	}
 
-	var totalDist int
+	var (
+		totalDist int
+		totalSim  int
+	)
 
-	// Iterate over sorted list(s) and calculate an atomic distance between the same-indexed elements.
+	// Iterate over sorted list(s) and calculate an atomic distance (and similarity) between the same-indexed elements.
 	for i := 0; i < len(leftVals); i++ {
-		var atomicDist int
+		var (
+			atomicDist int
+			atomicSim  int
+		)
 
+		// Distance
 		if atomicDist = leftVals[i] - rightVals[i]; atomicDist < 0 {
 			atomicDist *= -1
 		}
 
+		// Similarity
+		if count, found := rightValsCount[leftVals[i]]; found {
+			atomicSim = leftVals[i] * count
+		}
+
 		if debug {
-			fmt.Printf("%d\n", atomicDist)
+			fmt.Printf("%d,%d: dist %d\n", leftVals[i], rightVals[i], atomicDist)
+			fmt.Printf("%d: sim %d\n", leftVals[i], atomicSim)
 		}
 
 		totalDist += atomicDist
+		totalSim += atomicSim
 	}
 
 	fmt.Printf("Total distance: %d\n", totalDist)
+	fmt.Printf("Total similarity: %d\n", totalSim)
 
 	os.Exit(0)
 }
