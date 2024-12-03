@@ -13,5 +13,5 @@ go run 02/part_02.go -inputFile 02/input02.txt
 Or using the Docker engine and official Go image:
 
 ```shell
-docker run --rm -v "./:/opt/aoc" golang:1.23 go run /opt/aoc/02/part_02.go -inputFile /opt/aoc/02/input02.txt
+docker run --rm -v "./:/go" golang:1.23 go run 02/part_02.go -inputFile 02/input02.txt
 ```
