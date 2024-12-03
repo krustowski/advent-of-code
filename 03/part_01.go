@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 var inputFile string
@@ -47,14 +47,13 @@ func main() {
 		match := regex.FindAllString(rawLine, -1)
 
 		instructions = append(instructions, match...)
-		
 	}
 
 	fmt.Printf("instructions: %v\n", instructions)
 
 	var (
 		counter int
-		mulSum int64
+		mulSum  int64
 	)
 
 	for _, instruction := range instructions {
@@ -67,7 +66,7 @@ func main() {
 		joinedElems := regex.FindAllString(instruction, -1)
 
 		elems := strings.Split(joinedElems[0], ",")
-		
+
 		if len(elems) != 2 {
 			fmt.Printf("Unexpected len of elements in the extracted array: %d; %v\n", len(elems), elems)
 			continue
@@ -84,7 +83,7 @@ func main() {
 			fmt.Printf("String to int conversion error: %s\n", err.Error())
 			os.Exit(4)
 		}
-		
+
 		counter++
 		mulSum += val1 * val2
 	}
