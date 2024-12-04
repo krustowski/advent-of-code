@@ -68,9 +68,10 @@ func main() {
 		fmt.Printf("\n")
 	}
 
-	total := rows * cols
-	var prog int
-	var ctrl int
+	var (
+		prog int
+		ctrl int
+	)
 
 	for {
 		ctrl++
@@ -80,7 +81,7 @@ func main() {
 
 		grid(x, y, iterID)
 
-		if ctrl == total {
+		if ctrl == rows*cols {
 			fmt.Printf("The ctrl control reached (x: %3d, y: %3d)!\n", x, y)
 			break
 		}
