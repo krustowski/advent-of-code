@@ -111,20 +111,42 @@ func main() {
 	//
 
 	// Run the batch analysis of page updates matrix according to the rules matrix.
-	middlePageSum, err := checkPageUpdateOrder(&pageRules, &pageUpdates)
+	middlePageSum, failedUpdates, err := checkPageUpdateOrder(&pageRules, &pageUpdates)
 	if err != nil {
 		fmt.Printf("checkPageUpdateOrder: %s\n", err.Error())
 		os.Exit(3)
 	}
 
+	// [Part2] Run the page updates order repair and fetch the middlePageSum again.
+	fixedPageUpdates := fixPageUpdateOrder(&pageRules, failedUpdates)
+
+	middlePageFixedSum, control, err := checkPageUpdateOrder(&pageRules, fixedPageUpdates)
+	if err != nil {
+		fmt.Printf("checkPageUpdateOrder (fixed): %s\n", err.Error())
+		os.Exit(3)
+	}
+
+	if len(*control) != 0 {
+		fmt.Printf("Some failed page updates could not have been fixed!")
+		os.Exit(6)
+	}
+
+	//
+	//
+	//
+
 	fmt.Printf("\n--- results:\n")
 	fmt.Printf("middlePageSum: %d\n", middlePageSum)
+	fmt.Printf("middlePageFixedSum: %d\n", middlePageFixedSum)
 	os.Exit(0)
 }
 
-func checkPageUpdateOrder(rules *[][2]int, updates *[][]int) (middlesSum int, err error) {
+func checkPageUpdateOrder(rules *[][2]int, updates *[][]int) (middlesSum int, failedUpdates *[][]int, err error) {
+	var failed [][]int
+
 	for _, update := range *updates {
 		if ordered := checkSingleUpdate(rules, update); !ordered {
+			failed = append(failed, update)
 			continue
 		}
 
@@ -134,6 +156,7 @@ func checkPageUpdateOrder(rules *[][2]int, updates *[][]int) (middlesSum int, er
 		middlesSum += update[(len(update)-1)/2]
 	}
 
+	failedUpdates = &failed
 	return
 }
 
@@ -145,7 +168,7 @@ func checkSingleUpdate(rules *[][2]int, update []int) bool {
 	debugf("\n--- new update analysis\n")
 	debugf("update: %v\n", update)
 
-	// Iterate over the list of an update's pages. 
+	// Iterate over the list of an update's pages.
 	for i := 0; i < len(update)-1; i++ {
 		page := update[i]
 		remnant := update[i+1:]
@@ -170,4 +193,57 @@ func checkSingleUpdate(rules *[][2]int, update []int) bool {
 	}
 
 	return true
+}
+
+// [Part2]
+func fixPageUpdateOrder(rules *[][2]int, failedUpdates *[][]int) (fixedUpdates *[][]int) {
+	var fixed [][]int
+
+	for _, update := range *failedUpdates {
+		debugf("\n--- new failed update repairment\n")
+		debugf("failed update: %v\n", update)
+
+		// Iterate over the list of an update's pages.
+		for i := 0; i < len(update)-1; i++ {
+			page := update[i]
+			remnant := update[i+1:]
+
+			debugf("page: %v\n", page)
+			debugf("remnant: %v\n", remnant)
+
+			var reiterate bool
+
+			// Iterate over the remnant of an update and fix the order.
+			for j := 0; j < len(remnant); j++ {
+				if reiterate {
+					break
+				}
+
+				for _, rulePair := range *rules {
+					// Compare the 'page' and the current updateList item.
+					if page == rulePair[0] && remnant[j] == rulePair[1] {
+						continue
+					}
+
+					// Rule violation = fix the order and reiterate to loop over a new remnant for the current <i> index.
+					if page == rulePair[1] && remnant[j] == rulePair[0] {
+						update[i] = remnant[j]
+						update[i+j+1] = page
+						reiterate = true
+						break
+					}
+				}
+			}
+
+			if reiterate {
+				debugf("* reiterating\n")
+				i--
+			}
+		}
+
+		fixed = append(fixed, update)
+	}
+
+	fixedUpdates = &fixed
+	return
 }
