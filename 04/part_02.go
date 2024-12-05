@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	//"time"
 )
 
 //
@@ -46,9 +45,9 @@ type Path struct {
 var (
 	cols     int
 	iterID   int
-	iterPath          = make(map[int]*Path)
-	hashPath          = make(map[string]*Path)
-	matrix   [][]byte = make([][]byte, 140)
+	iterPath = make(map[int]*Path)
+	hashPath = make(map[string]*Path)
+	matrix   [][]byte
 	rows     int
 	xCount   int
 )
@@ -59,16 +58,12 @@ func main() {
 		return
 	}
 
-	var counter int
-
 	// Use scanner to scan line by line.
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		bb := make([]byte, 140)
-		bb = scanner.Bytes()
+		bb := scanner.Bytes()
 
-		matrix[counter] = bb
-		counter++
+		matrix = append(matrix, bb)
 	}
 
 	// Check for any possible error.
@@ -130,21 +125,33 @@ func grid(x, y int, iID int) {
 
 	for i := -1; i <= 1; i++ {
 		for j := -1; j <= 1; j++ {
-			cX := x + i
-			cY := y + j
-
-			// The very middle element = 'A'
+			// Skip the very middle element ('A').
 			if i == 0 && j == 0 {
 				continue
 			}
 
-			// Skip horizontal and vertical coords.
+			//
+			//  Skip horizontal and vertical coords relative to the X shape center ('A').
+			//
+			//  i/j | -1  0  1
+			//  ----|---------
+			//    -1|  .  x  .
+			//     0|  x  .  x
+			//     1|  .  x  .
+			//
 			if (i == 0 && j == -1) || (i == -1 && j == 0) || (i == 0 && j == 1) || (i == 1 && j == 0) {
 				continue
 			}
 
-			if (cX >= 0 && cY >= 0) && (cX < rows && cY < cols) {
+			// Recalculate the position with relative coords.
+			cX := x + i
+			cY := y + j
+
+			// Only run within the matrix' bounds.
+			if cX >= 0 && cY >= 0 && cX < rows && cY < cols {
 				path, found := iterPath[iID]
+
+				var cornerLetter string
 
 				switch string(matrix[cX][cY]) {
 				case "A":
@@ -152,84 +159,70 @@ func grid(x, y int, iID int) {
 						continue
 					}
 
-					//_ = int(time.Now().Unix())
-
+					// Prepare the contents for a new Path struct instance.
 					pts := [][2]int{{cX, cY}}
-					iterPath[iterID] = &Path{Coords: pts, Literae: []string{"A"}}
-					//iterPath[id] = &Path{Coords: pts, Literae: []string{"A"}}
+					iterPath[iID] = &Path{Coords: pts, Literae: []string{"A"}}
 
-					grid(cX, cY, iterID)
-					//grid(cX, cY, id)
+					grid(cX, cY, iID)
+					continue
 
 				case "M":
 					if !found {
 						continue
 					}
 
-					point := [2]int{cX, cY}
-					newCoords := append(path.Coords, point)
-					newPath := &Path{Coords: newCoords, Literae: append(path.Literae, "M")}
-
-					if !checkXShape(newPath) {
-						continue
-					}
-
-					if len(newPath.Coords) == 5 {
-						newPath.FullShape = true
-						xCount++
-						iterPath[iID] = newPath
-
-						//fmt.Printf("FullShape: Literae: %v\n", newPath.Literae)
-						//fmt.Printf("FullShape: Coords: %v\n", newPath.Coords)
-
-						saveToHashPath(newPath)
-
-						return
-					}
-
-					iterPath[iID] = newPath
+					cornerLetter = "M"
 
 				case "S":
 					if !found {
 						continue
 					}
 
-					point := [2]int{cX, cY}
-					newCoords := append(path.Coords, point)
-					newPath := &Path{Coords: newCoords, Literae: append(path.Literae, "S")}
+					cornerLetter = "S"
 
-					if !checkXShape(newPath) {
-						continue
-					}
-
-					if len(newPath.Coords) == 5 {
-						newPath.FullShape = true
-						xCount++
-						iterPath[iID] = newPath
-
-						//fmt.Printf("FullShape: Literae: %v\n", newPath.Literae)
-						//fmt.Printf("FullShape: Coords: %v\n", newPath.Coords)
-
-						saveToHashPath(newPath)
-
-						return
-					}
-
-					iterPath[iID] = newPath
+				default:
+					continue
 				}
+
+				point := [2]int{cX, cY}
+				newCoords := append(path.Coords, point)
+				newPath := &Path{Coords: newCoords, Literae: append(path.Literae, cornerLetter)}
+
+				if !checkXShape(newPath) {
+					continue
+				}
+
+				if len(newPath.Coords) != 5 {
+					iterPath[iID] = newPath
+					continue
+				}
+
+				if saved := saveToHashPath(newPath); saved {
+					xCount++
+				}
+
+				newPath.FullShape = true
+				iterPath[iID] = newPath
+				return
 			}
 		}
 	}
 }
 
-func saveToHashPath(path *Path) {
+func saveToHashPath(path *Path) bool {
 	var joined string
 
 	for _, pair := range path.Coords {
 		joined += fmt.Sprintf("%d,%d,", pair[0], pair[1])
 	}
 
+	// Check if such "hash" has been already saved (do not overwrite).
+	if _, found := hashPath[joined]; found {
+		return false
+	}
+
 	hashPath[joined] = path
+	return true
 }
 
 // checkXShape is called exclusively in cases when the letters 'M' or 'S' are hit to be around the core 'A' letter.
@@ -286,19 +279,21 @@ func checkXShape(path *Path) bool {
 	}
 
 	if string(matrix[x][y]) != passiveLtr {
-		debugf("The letter located remote diagonally is unexpected\n")
+		debugf("The remote letter relative diagonally is unexpected (not S when input is M and vice versa))\n")
 		return false
 	}
 
 	diagonal = [][2]int{pth[len(pth)-1], pth[0], {x, y}}
 
-	debugf("--- Diagonal ready: %v\n", diagonal)
+	debugf("--- The diagonal is ready: %v\n", diagonal)
 	return true
 }
 
+// drawColoredInput uses the hashPath map <hp> to create a coloured string matrix M based on the initial input matrix <mx>.
 func drawColorSolution(mx [][]byte, hp map[string]*Path) {
 	var M [][]string = make([][]string, len(mx))
 
+	// At first, copy/convert the input matrix to a string matrix.
 	for i, ival := range mx {
 		row := make([]string, len(ival))
 
@@ -309,13 +304,13 @@ func drawColorSolution(mx [][]byte, hp map[string]*Path) {
 		M[i] = row
 	}
 
+	// Then loop over ther hashPath map to colour the string matrix' elements.
 	for _, path := range hp {
 		if !path.FullShape {
 			continue
 		}
 
 		for _, pair := range path.Coords {
-
 			x := pair[0]
 			y := pair[1]
 
@@ -324,6 +319,7 @@ func drawColorSolution(mx [][]byte, hp map[string]*Path) {
 		}
 	}
 
+	// And finally: print the matrix to stdout.
 	for i := 0; i < len(M); i++ {
 		for j := 0; j < len(M[0]); j++ {
 			fmt.Printf("%s ", M[i][j])
