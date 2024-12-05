@@ -99,7 +99,7 @@ func main() {
 		prog++
 	}
 
-	drawColorSolution(matrix, hashPath)
+	drawColouredInput(matrix, hashPath)
 
 	fmt.Printf("\n--- stats:\n")
 	fmt.Printf("iterations : %d\n", iterID)
@@ -289,8 +289,8 @@ func checkXShape(path *Path) bool {
 	return true
 }
 
-// drawColoredInput uses the hashPath map <hp> to create a coloured string matrix M based on the initial input matrix <mx>.
-func drawColorSolution(mx [][]byte, hp map[string]*Path) {
+// drawColouredInput uses the hashPath map <hp> to create a coloured string matrix M based on the initial input matrix <mx>.
+func drawColouredInput(mx [][]byte, hp map[string]*Path) {
 	var M [][]string = make([][]string, len(mx))
 
 	// At first, copy/convert the input matrix to a string matrix.
