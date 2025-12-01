@@ -10,7 +10,7 @@ import (
 const dialSize = 100
 
 func main() {
-	fhdl, err := os.Open("input02.txt")
+	fhdl, err := os.Open("input01.txt")
 	if err != nil {
 		panic("no input file")
 	}
@@ -41,7 +41,7 @@ func main() {
 		case "L":
 			{
 				op = -1
-				if position-dist < 0 && position != 0 {
+				if position-dist < 0 && position-dist > -dialSize && position != 0 {
 					counter++
 				}
 				if position-dist <= -dialSize {
@@ -49,10 +49,9 @@ func main() {
 				}
 			}
 		case "R":
-		default:
 			{
 				op = 1
-				if position+dist >= dialSize && position != 0 {
+				if position+dist >= dialSize {
 					counter += (position + dist) / dialSize
 				}
 			}
@@ -60,13 +59,15 @@ func main() {
 
 		position += op * dist
 		if position < 0 {
-			position = dialSize - op*position
+			position = (dialSize + position%dialSize) % dialSize
 		}
 		position %= dialSize
 
 		if position == 0 {
 			counter++
 		}
+
+		fmt.Printf("position: %d\n", position)
 	}
 
 	fmt.Printf("counter: %d\n", counter)
