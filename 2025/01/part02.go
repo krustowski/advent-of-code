@@ -9,6 +9,8 @@ import (
 
 const dialSize = 100
 
+var debug = false
+
 func main() {
 	fhdl, err := os.Open("input01.txt")
 	if err != nil {
@@ -41,34 +43,48 @@ func main() {
 		case "L":
 			{
 				op = -1
-				if position-dist < 0 && position-dist > -dialSize && position != 0 {
-					counter++
-				}
-				if position-dist <= -dialSize {
-					counter -= (position - dist) / dialSize
+
+				for i := 1; i < dist; i++ {
+					if (dialSize+(position-i))%dialSize == 0 {
+						counter++
+						debugf("=> new zero!\n")
+					}
 				}
 			}
 		case "R":
 			{
 				op = 1
-				if position+dist >= dialSize {
-					counter += (position + dist) / dialSize
+
+				for i := 1; i < dist; i++ {
+					if (position+i)%dialSize == 0 {
+						counter++
+						debugf("=> new zero!\n")
+					}
 				}
 			}
 		}
 
 		position += op * dist
+
 		if position < 0 {
-			position = (dialSize + position%dialSize) % dialSize
+			position = (dialSize + position) % dialSize
+		} else {
+			position %= dialSize
 		}
-		position %= dialSize
 
 		if position == 0 {
 			counter++
+			debugf("=> new zero!\n")
 		}
 
-		fmt.Printf("position: %d\n", position)
+		debugf("%s to position: %d\n", string(bb), position)
 	}
 
 	fmt.Printf("counter: %d\n", counter)
+}
+
+func debugf(f string, arg ...any) {
+	if debug {
+		fmt.Printf(f, arg...)
+	}
 }
