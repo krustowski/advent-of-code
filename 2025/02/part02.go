@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	bytes, err := os.ReadFile("input02t.txt")
+	bytes, err := os.ReadFile("input02.txt")
 	if err != nil {
 		panic("no input file")
 	}
@@ -98,81 +98,9 @@ func inspectSlice(str string) (bool, int) {
 
 		if len(buf) > 1 {
 			buf = buf[:len(buf)-1]
-
-			// fmt.Printf("buf len: %d\n", len(buf))
 			continue
 		}
 	}
 
 	return true, matches
-}
-
-func inspectSliceOld(str string) (bool, int) {
-	buf := make([]rune, 0, len(str))
-	matches := 0
-
-	for i, r := range str {
-		if i == 0 {
-			buf = append(buf, r)
-			continue
-		}
-
-		if i == len(str)-1 {
-			if subInspectSlice(string(str[len(str)-1]), len(buf)-1, buf) {
-				matches++
-				break
-			}
-		}
-
-		if subInspectSlice(str[i:], i-1, buf) {
-			matches++
-		} else {
-			buf = append(buf, r)
-		}
-	}
-
-	if matches > 0 && len(str)%(matches) == 0 {
-		fmt.Printf("%v\n", string(buf))
-		return true, matches
-	}
-
-	return false, 0
-}
-
-func subInspectSlice(str string, offset int, trend []rune) bool {
-	if len(str) == 0 {
-		return false
-	}
-
-	if len(str) == 1 && offset < len(trend) {
-		if string(str[0]) == string(trend[offset]) {
-			return true
-		}
-	}
-
-	if len(str)%2 == 0 {
-		if len(trend) == 2 {
-			if string(trend) == string(str) {
-				return true
-			}
-		}
-
-		if subInspectSlice(str[1:], offset, trend) {
-			return true
-		}
-	}
-
-	if len(str) > 2 {
-		if len(str)%len(trend) == 0 {
-			if subInspectSlice(str[3:], offset, trend) {
-				return true
-			}
-		}
-
-		if subInspectSlice(str[1:], offset+1, trend) {
-			return true
-		}
-	}
-
-	return false
 }
