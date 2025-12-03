@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	fhdl, err := os.Open("input03t.txt")
+	fhdl, err := os.Open("input03.txt")
 	if err != nil {
 		panic("no input file")
 	}
@@ -29,6 +29,10 @@ func main() {
 	for scanner.Scan() {
 		og := scanner.Text()
 
+		if len(og) == 0 {
+			continue
+		}
+
 		line := strings.Clone(og)
 
 		//
@@ -42,10 +46,16 @@ func main() {
 					i++
 				}
 
-				pos, err := getNextMaxPosition(&line, poss[i-1]%14)
+				pos, err := getNextMaxPosition(&line, poss[i-1]%(len(line)-1))
 				if err != nil {
-					fmt.Println(err)
-					continue
+					fmt.Printf("poss: %v \t len(line): %d\n", poss, len(line))
+					// fmt.Println(err)
+
+					pos, err = getNextMaxPosition(&line, 0)
+					if err != nil {
+						fmt.Println(err)
+						continue
+					}
 				}
 
 				poss = append(poss, pos)
@@ -55,11 +65,7 @@ func main() {
 						break
 					}
 
-					if j >= len(poss) {
-						continue
-					}
-
-					pos, err := getNextMaxPosition(&line, (poss[i-1]+j)%14)
+					pos, err := getNextMaxPosition(&line, (poss[i-1]+j)%(len(line)-1))
 					if err != nil {
 						fmt.Println(err)
 						continue
@@ -130,8 +136,7 @@ func extractPosFromString(str string) (int, error) {
 	for i, r := range str {
 		num, err := strconv.Atoi(string(r))
 		if err != nil {
-			fmt.Println(err)
-			continue
+			return 0, err
 		}
 
 		if num > max {
