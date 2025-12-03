@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	fhdl, err := os.Open("input03.txt")
+	fhdl, err := os.Open("input03t.txt")
 	if err != nil {
 		panic("no input file")
 	}
@@ -29,7 +29,7 @@ func main() {
 	for scanner.Scan() {
 		og := scanner.Text()
 
-		if len(og) == 0 {
+		if len(og) < 12 {
 			continue
 		}
 
