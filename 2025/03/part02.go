@@ -42,25 +42,10 @@ func main() {
 		for i := 0; len(poss) < 12; i++ {
 			if len(poss) > 0 {
 				if i > len(poss) {
-					i %= len(poss)
-					i++
+					i = 1
 				}
 
-				pos, err := getNextMaxPosition(&line, poss[i-1]%(len(line)-1))
-				if err != nil {
-					fmt.Printf("poss: %v \t len(line): %d\n", poss, len(line))
-					// fmt.Println(err)
-
-					pos, err = getNextMaxPosition(&line, 0)
-					if err != nil {
-						fmt.Println(err)
-						continue
-					}
-				}
-
-				poss = append(poss, pos)
-
-				for j := 0; j < len(line)-poss[i-1]; j++ {
+				for j := 0; j < len(line)-poss[i-1]+1; j++ {
 					if len(poss) == 12 {
 						break
 					}
@@ -96,7 +81,7 @@ func main() {
 
 func getNextMaxPosition(line *string, offset int) (int, error) {
 	if len(*line) <= offset {
-		return 0, nil
+		return 0, errors.New("offset out of bounds")
 	}
 
 	pos, err := extractPosFromString((*line)[offset:])
