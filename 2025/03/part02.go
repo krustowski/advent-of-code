@@ -11,8 +11,10 @@ import (
 	"strings"
 )
 
+const batteriesNeeded = 12
+
 func main() {
-	fhdl, err := os.Open("input03t.txt")
+	fhdl, err := os.Open("input03.txt")
 	if err != nil {
 		panic("no input file")
 	}
@@ -29,37 +31,35 @@ func main() {
 	for scanner.Scan() {
 		og := scanner.Text()
 
-		if len(og) < 12 {
+		if len(og) < batteriesNeeded {
 			continue
 		}
 
 		line := strings.Clone(og)
+		poss := make([]int, 0, batteriesNeeded)
 
-		//
-
-		poss := make([]int, 0, 12)
-
-		for i := 0; len(poss) < 12; i++ {
-			if len(poss) > 0 {
-				if i > len(poss) {
-					i = 1
-				}
-
-				for j := 0; j < len(line)-poss[i-1]+1; j++ {
-					if len(poss) == 12 {
-						break
-					}
-
-					pos, err := getNextMaxPosition(&line, (poss[i-1]+j)%(len(line)-1))
-					if err != nil {
-						fmt.Println(err)
-						continue
-					}
-
-					poss = append(poss, pos)
-				}
-			} else {
+		for i := 0; len(poss) < batteriesNeeded; i++ {
+			if len(poss) == 0 {
 				pos, err := getNextMaxPosition(&line, 0)
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
+
+				poss = append(poss, pos)
+				continue
+			}
+
+			if i > len(poss) {
+				i = 1
+			}
+
+			for j := 0; j < len(line)-poss[i-1]+1; j++ {
+				if len(poss) == batteriesNeeded {
+					break
+				}
+
+				pos, err := getNextMaxPosition(&line, (poss[i-1]+j)%(len(line)-1))
 				if err != nil {
 					fmt.Println(err)
 					continue
@@ -68,8 +68,6 @@ func main() {
 				poss = append(poss, pos)
 			}
 		}
-
-		//
 
 		fmt.Printf("%v \n", poss)
 
@@ -107,7 +105,7 @@ func assembleBankJoltage(poss []int, og string) int {
 			continue
 		}
 
-		total += int(float64(num) * math.Pow(10, float64(11-i)))
+		total += int(float64(num) * math.Pow(10, float64((batteriesNeeded-1)-i)))
 	}
 
 	fmt.Printf("%d\n", total)
